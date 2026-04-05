@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText inputText;
     private Button clipboardBtn, inputBtn, clearBtn;
     private ProgressBar progressBar;
-    private ScrollView resultsScroll;
+    private ScrollView mainScroll;
     private LinearLayout resultsLayout;
     private TextView zhResult, enResult, frResult;
 
@@ -49,17 +49,11 @@ public class MainActivity extends AppCompatActivity {
         inputBtn     = findViewById(R.id.input_btn);
         clearBtn     = findViewById(R.id.clear_btn);
         progressBar  = findViewById(R.id.progress_bar);
-        resultsScroll  = findViewById(R.id.results_scroll);
-        resultsLayout  = findViewById(R.id.results_layout);
+        mainScroll   = findViewById(R.id.main_scroll);
+        resultsLayout = findViewById(R.id.results_layout);
         zhResult     = findViewById(R.id.zh_result);
         enResult     = findViewById(R.id.en_result);
         frResult     = findViewById(R.id.fr_result);
-
-        // 让输入框支持内部滚动
-        inputText.setOnTouchListener((v, event) -> {
-            v.getParent().requestDisallowInterceptTouchEvent(true);
-            return false;
-        });
 
         clipboardBtn.setOnClickListener(v -> {
             ClipboardManager cb = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
@@ -91,7 +85,9 @@ public class MainActivity extends AppCompatActivity {
             zhResult.setText("");
             enResult.setText("");
             frResult.setText("");
-            resultsScroll.setVisibility(View.GONE);
+            resultsLayout.setVisibility(View.GONE);
+            // 滚回顶部
+            mainScroll.post(() -> mainScroll.smoothScrollTo(0, 0));
             Toast.makeText(this, "已清空", Toast.LENGTH_SHORT).show();
         });
 
@@ -102,10 +98,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTranslation(String text) {
         progressBar.setVisibility(View.VISIBLE);
-        resultsScroll.setVisibility(View.VISIBLE);
-        zhResult.setText("");
-        enResult.setText("");
-        frResult.setText("");
+        resultsLayout.setVisibility(View.GONE);
         setButtonsEnabled(false);
 
         executor.execute(() -> {
@@ -115,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
 
                 JSONObject requestBody = new JSONObject();
                 requestBody.put("model", MODEL);
-                requestBody.put("max_tokens", 4096); // 大幅提升，支持长文本
+                requestBody.put("max_tokens", 4096);
                 JSONArray messages = new JSONArray();
                 JSONObject msg = new JSONObject();
                 msg.put("role", "user");
@@ -130,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
                 conn.setRequestProperty("Authorization", "Bearer " + API_KEY);
                 conn.setDoOutput(true);
                 conn.setConnectTimeout(30000);
-                conn.setReadTimeout(60000); // 长文本需要更长等待时间
+                conn.setReadTimeout(60000);
 
                 OutputStream os = conn.getOutputStream();
                 os.write(requestBody.toString().getBytes("UTF-8"));
@@ -159,13 +152,15 @@ public class MainActivity extends AppCompatActivity {
                     enResult.setText(en);
                     frResult.setText(fr);
                     progressBar.setVisibility(View.GONE);
+                    resultsLayout.setVisibility(View.VISIBLE);
                     setButtonsEnabled(true);
+                    // 翻译完成后自动滚动到结果区域
+                    mainScroll.post(() -> mainScroll.smoothScrollTo(0, resultsLayout.getTop()));
                 });
             } catch (Exception e) {
                 mainHandler.post(() -> {
                     Toast.makeText(this, "翻译失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
                     progressBar.setVisibility(View.GONE);
-                    resultsScroll.setVisibility(View.GONE);
                     setButtonsEnabled(true);
                 });
             }

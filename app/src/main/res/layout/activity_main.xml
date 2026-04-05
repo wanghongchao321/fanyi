@@ -1,59 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_scroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#0F0F1A">
+    android:background="#0F0F1A"
+    android:fillViewport="true">
 
-    <!-- 顶部标题（固定） -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="智能翻译"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#E8D5FF"
-        android:gravity="center"
-        android:paddingTop="24dp"
-        android:paddingBottom="4dp"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="中文 · English · Français"
-        android:textSize="13sp"
-        android:textColor="#8877AA"
-        android:gravity="center"
-        android:paddingBottom="16dp"/>
-
-    <!-- 输入框：可自由滚动，高度自适应最小160dp -->
-    <EditText
-        android:id="@+id/input_text"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:minHeight="160dp"
-        android:hint="在此输入或粘贴要翻译的内容..."
-        android:textColor="#E8D5FF"
-        android:textSize="15sp"
-        android:padding="16dp"
-        android:gravity="top"
-        android:background="@drawable/input_bg"
-        android:inputType="textMultiLine"
-        android:scrollbars="vertical"
-        android:overScrollMode="always"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginBottom="12dp"/>
-
-    <!-- 按钮区（固定在底部） -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp"
-        android:paddingTop="0dp">
+        android:padding="20dp">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="智能翻译"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#E8D5FF"
+            android:gravity="center"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="4dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="中文 · English · Français"
+            android:textSize="13sp"
+            android:textColor="#8877AA"
+            android:gravity="center"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- 输入框：wrap_content，最小高度120，最大高度由内容撑开 -->
+        <EditText
+            android:id="@+id/input_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="120dp"
+            android:hint="在此输入或粘贴要翻译的内容..."
+            android:textColor="#E8D5FF"
+            android:textSize="15sp"
+            android:padding="16dp"
+            android:gravity="top"
+            android:background="@drawable/input_bg"
+            android:inputType="textMultiLine"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- 按钮行 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -93,32 +87,25 @@
             android:text="🗑️ 清空"
             android:textSize="13sp"
             android:textColor="#AA8899"
-            android:background="@drawable/btn_bg_clear"/>
+            android:background="@drawable/btn_bg_clear"
+            android:layout_marginBottom="24dp"/>
 
-    </LinearLayout>
+        <!-- 加载中 -->
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp"/>
 
-    <!-- 翻译结果（可滚动） -->
-    <ScrollView
-        android:id="@+id/results_scroll"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:visibility="gone">
-
+        <!-- 翻译结果：全部在同一个ScrollView里，自然流动 -->
         <LinearLayout
             android:id="@+id/results_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
-
-            <ProgressBar
-                android:id="@+id/progress_bar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:visibility="gone"
-                android:layout_marginBottom="16dp"/>
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="match_parent"
@@ -190,6 +177,5 @@
                 android:layout_marginBottom="30dp"/>
 
         </LinearLayout>
-    </ScrollView>
-
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>
