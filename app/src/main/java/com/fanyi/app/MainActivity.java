@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText inputText;
     private Button clipboardBtn, inputBtn, clearBtn;
     private ProgressBar progressBar;
+    private ScrollView resultsScroll;
     private LinearLayout resultsLayout;
     private TextView zhResult, enResult, frResult;
 
@@ -42,20 +44,27 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        inputText = findViewById(R.id.input_text);
+        inputText    = findViewById(R.id.input_text);
         clipboardBtn = findViewById(R.id.clipboard_btn);
-        inputBtn = findViewById(R.id.input_btn);
-        clearBtn = findViewById(R.id.clear_btn);
-        progressBar = findViewById(R.id.progress_bar);
-        resultsLayout = findViewById(R.id.results_layout);
-        zhResult = findViewById(R.id.zh_result);
-        enResult = findViewById(R.id.en_result);
-        frResult = findViewById(R.id.fr_result);
+        inputBtn     = findViewById(R.id.input_btn);
+        clearBtn     = findViewById(R.id.clear_btn);
+        progressBar  = findViewById(R.id.progress_bar);
+        resultsScroll  = findViewById(R.id.results_scroll);
+        resultsLayout  = findViewById(R.id.results_layout);
+        zhResult     = findViewById(R.id.zh_result);
+        enResult     = findViewById(R.id.en_result);
+        frResult     = findViewById(R.id.fr_result);
+
+        // 让输入框支持内部滚动
+        inputText.setOnTouchListener((v, event) -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            return false;
+        });
 
         clipboardBtn.setOnClickListener(v -> {
-            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            if (clipboard.hasPrimaryClip() && clipboard.getPrimaryClip().getItemCount() > 0) {
-                CharSequence seq = clipboard.getPrimaryClip().getItemAt(0).getText();
+            ClipboardManager cb = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if (cb.hasPrimaryClip() && cb.getPrimaryClip().getItemCount() > 0) {
+                CharSequence seq = cb.getPrimaryClip().getItemAt(0).getText();
                 if (seq != null && seq.toString().trim().length() > 0) {
                     String text = seq.toString().trim();
                     inputText.setText(text);
@@ -77,13 +86,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // 清空按钮：清空输入框和翻译结果
         clearBtn.setOnClickListener(v -> {
             inputText.setText("");
             zhResult.setText("");
             enResult.setText("");
             frResult.setText("");
-            resultsLayout.setVisibility(View.GONE);
+            resultsScroll.setVisibility(View.GONE);
             Toast.makeText(this, "已清空", Toast.LENGTH_SHORT).show();
         });
 
@@ -94,23 +102,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTranslation(String text) {
         progressBar.setVisibility(View.VISIBLE);
-        resultsLayout.setVisibility(View.GONE);
-        clipboardBtn.setEnabled(false);
-        inputBtn.setEnabled(false);
-        clearBtn.setEnabled(false);
+        resultsScroll.setVisibility(View.VISIBLE);
+        zhResult.setText("");
+        enResult.setText("");
+        frResult.setText("");
+        setButtonsEnabled(false);
 
         executor.execute(() -> {
             try {
-                String prompt = "将以下文本翻译成中文、英文和法文。严格只返回JSON，格式：{\"zh\":\"中文\",\"en\":\"English\",\"fr\":\"Français\"}\n原文：" + text;
+                String prompt = "将以下文本完整翻译成中文、英文和法文，不得省略任何内容。" +
+                        "严格只返回JSON，格式：{\"zh\":\"中文完整译文\",\"en\":\"English full translation\",\"fr\":\"Traduction française complète\"}\n原文：" + text;
 
                 JSONObject requestBody = new JSONObject();
                 requestBody.put("model", MODEL);
-                requestBody.put("max_tokens", 1000);
+                requestBody.put("max_tokens", 4096); // 大幅提升，支持长文本
                 JSONArray messages = new JSONArray();
-                JSONObject message = new JSONObject();
-                message.put("role", "user");
-                message.put("content", prompt);
-                messages.put(message);
+                JSONObject msg = new JSONObject();
+                msg.put("role", "user");
+                msg.put("content", prompt);
+                messages.put(msg);
                 requestBody.put("messages", messages);
 
                 URL url = new URL(API_URL);
@@ -119,8 +129,8 @@ public class MainActivity extends AppCompatActivity {
                 conn.setRequestProperty("Content-Type", "application/json");
                 conn.setRequestProperty("Authorization", "Bearer " + API_KEY);
                 conn.setDoOutput(true);
-                conn.setConnectTimeout(15000);
-                conn.setReadTimeout(30000);
+                conn.setConnectTimeout(30000);
+                conn.setReadTimeout(60000); // 长文本需要更长等待时间
 
                 OutputStream os = conn.getOutputStream();
                 os.write(requestBody.toString().getBytes("UTF-8"));
@@ -149,26 +159,28 @@ public class MainActivity extends AppCompatActivity {
                     enResult.setText(en);
                     frResult.setText(fr);
                     progressBar.setVisibility(View.GONE);
-                    resultsLayout.setVisibility(View.VISIBLE);
-                    clipboardBtn.setEnabled(true);
-                    inputBtn.setEnabled(true);
-                    clearBtn.setEnabled(true);
+                    setButtonsEnabled(true);
                 });
             } catch (Exception e) {
                 mainHandler.post(() -> {
                     Toast.makeText(this, "翻译失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
                     progressBar.setVisibility(View.GONE);
-                    clipboardBtn.setEnabled(true);
-                    inputBtn.setEnabled(true);
-                    clearBtn.setEnabled(true);
+                    resultsScroll.setVisibility(View.GONE);
+                    setButtonsEnabled(true);
                 });
             }
         });
     }
 
+    private void setButtonsEnabled(boolean enabled) {
+        clipboardBtn.setEnabled(enabled);
+        inputBtn.setEnabled(enabled);
+        clearBtn.setEnabled(enabled);
+    }
+
     private void copyText(String text, String lang) {
-        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        clipboard.setPrimaryClip(ClipData.newPlainText("translation", text));
+        ClipboardManager cb = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        cb.setPrimaryClip(ClipData.newPlainText("translation", text));
         Toast.makeText(this, lang + " 已复制！", Toast.LENGTH_SHORT).show();
     }
 }
