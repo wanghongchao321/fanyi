@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     private EditText inputText;
-    private Button translateBtn;
+    private Button clipboardBtn, inputBtn;
     private ProgressBar progressBar;
     private LinearLayout resultsLayout;
     private TextView zhResult, enResult, frResult;
@@ -43,14 +43,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         inputText = findViewById(R.id.input_text);
-        translateBtn = findViewById(R.id.translate_btn);
+        clipboardBtn = findViewById(R.id.clipboard_btn);
+        inputBtn = findViewById(R.id.input_btn);
         progressBar = findViewById(R.id.progress_bar);
         resultsLayout = findViewById(R.id.results_layout);
         zhResult = findViewById(R.id.zh_result);
         enResult = findViewById(R.id.en_result);
         frResult = findViewById(R.id.fr_result);
 
-        translateBtn.setOnClickListener(v -> {
+        // 按钮1：读取剪贴板并翻译
+        clipboardBtn.setOnClickListener(v -> {
             ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             if (clipboard.hasPrimaryClip() && clipboard.getPrimaryClip().getItemCount() > 0) {
                 CharSequence seq = clipboard.getPrimaryClip().getItemAt(0).getText();
@@ -66,6 +68,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // 按钮2：翻译输入框内容
+        inputBtn.setOnClickListener(v -> {
+            String text = inputText.getText().toString().trim();
+            if (text.isEmpty()) {
+                Toast.makeText(this, "请先输入要翻译的内容", Toast.LENGTH_SHORT).show();
+            } else {
+                startTranslation(text);
+            }
+        });
+
         zhResult.setOnClickListener(v -> copyText(zhResult.getText().toString(), "中文"));
         enResult.setOnClickListener(v -> copyText(enResult.getText().toString(), "English"));
         frResult.setOnClickListener(v -> copyText(frResult.getText().toString(), "Français"));
@@ -74,7 +86,8 @@ public class MainActivity extends AppCompatActivity {
     private void startTranslation(String text) {
         progressBar.setVisibility(View.VISIBLE);
         resultsLayout.setVisibility(View.GONE);
-        translateBtn.setEnabled(false);
+        clipboardBtn.setEnabled(false);
+        inputBtn.setEnabled(false);
 
         executor.execute(() -> {
             try {
@@ -127,13 +140,15 @@ public class MainActivity extends AppCompatActivity {
                     frResult.setText(fr);
                     progressBar.setVisibility(View.GONE);
                     resultsLayout.setVisibility(View.VISIBLE);
-                    translateBtn.setEnabled(true);
+                    clipboardBtn.setEnabled(true);
+                    inputBtn.setEnabled(true);
                 });
             } catch (Exception e) {
                 mainHandler.post(() -> {
                     Toast.makeText(this, "翻译失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
                     progressBar.setVisibility(View.GONE);
-                    translateBtn.setEnabled(true);
+                    clipboardBtn.setEnabled(true);
+                    inputBtn.setEnabled(true);
                 });
             }
         });
