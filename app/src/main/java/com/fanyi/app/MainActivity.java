@@ -25,19 +25,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
-
     private EditText inputText;
     private Button translateBtn;
     private ProgressBar progressBar;
     private LinearLayout resultsLayout;
-
     private TextView zhResult, enResult, frResult;
-    private TextView zhLabel, enLabel, frLabel;
 
     private final String API_KEY = "34c1a4c87e2f4665b9b5bb0f9e0932cb.do6Zl8FEsus2Ybgp";
     private final String API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
     private final String MODEL = "glm-4-flashx-250414";
-
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -46,25 +42,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        inputText   = findViewById(R.id.input_text);
+        inputText = findViewById(R.id.input_text);
         translateBtn = findViewById(R.id.translate_btn);
         progressBar = findViewById(R.id.progress_bar);
         resultsLayout = findViewById(R.id.results_layout);
-
         zhResult = findViewById(R.id.zh_result);
         enResult = findViewById(R.id.en_result);
         frResult = findViewById(R.id.fr_result);
-        zhLabel  = findViewById(R.id.zh_label);
-        enLabel  = findViewById(R.id.en_label);
-        frLabel  = findViewById(R.id.fr_label);
 
         translateBtn.setOnClickListener(v -> {
-            // 自动读取剪贴板
             ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            if (clipboard.hasPrimaryClip()) {
-                ClipData.Item item = clipboard.getPrimaryClip().getItemAt(0);
-                String text = item.getText().toString().trim();
-                if (!text.isEmpty()) {
+            if (clipboard.hasPrimaryClip() && clipboard.getPrimaryClip().getItemCount() > 0) {
+                CharSequence seq = clipboard.getPrimaryClip().getItemAt(0).getText();
+                if (seq != null && seq.toString().trim().length() > 0) {
+                    String text = seq.toString().trim();
                     inputText.setText(text);
                     startTranslation(text);
                 } else {
@@ -75,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // 点击结果直接复制
         zhResult.setOnClickListener(v -> copyText(zhResult.getText().toString(), "中文"));
         enResult.setOnClickListener(v -> copyText(enResult.getText().toString(), "English"));
         frResult.setOnClickListener(v -> copyText(frResult.getText().toString(), "Français"));
@@ -88,15 +78,11 @@ public class MainActivity extends AppCompatActivity {
 
         executor.execute(() -> {
             try {
-                String prompt = "请将以下文本翻译成中文、英文和法文三种语言。\n" +
-                        "严格按照以下JSON格式返回，不要有任何其他内容：\n" +
-                        "{\"zh\":\"中文翻译\",\"en\":\"English translation\",\"fr\":\"Traduction française\"}\n\n" +
-                        "原文：" + text;
+                String prompt = "将以下文本翻译成中文、英文和法文。严格只返回JSON，格式：{\"zh\":\"中文\",\"en\":\"English\",\"fr\":\"Français\"}\n原文：" + text;
 
                 JSONObject requestBody = new JSONObject();
                 requestBody.put("model", MODEL);
                 requestBody.put("max_tokens", 1000);
-
                 JSONArray messages = new JSONArray();
                 JSONObject message = new JSONObject();
                 message.put("role", "user");
@@ -117,14 +103,8 @@ public class MainActivity extends AppCompatActivity {
                 os.write(requestBody.toString().getBytes("UTF-8"));
                 os.close();
 
-                int responseCode = conn.getResponseCode();
-                BufferedReader reader;
-                if (responseCode == 200) {
-                    reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
-                } else {
-                    reader = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "UTF-8"));
-                }
-
+                BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream(), "UTF-8"));
                 StringBuilder sb = new StringBuilder();
                 String line;
                 while ((line = reader.readLine()) != null) sb.append(line);
@@ -132,14 +112,10 @@ public class MainActivity extends AppCompatActivity {
 
                 JSONObject response = new JSONObject(sb.toString());
                 String content = response.getJSONArray("choices")
-                        .getJSONObject(0)
-                        .getJSONObject("message")
-                        .getString("content").trim();
+                        .getJSONObject(0).getJSONObject("message")
+                        .getString("content").trim()
+                        .replaceAll("```json\\n?", "").replaceAll("```\\n?", "").trim();
 
-                // 解析JSON结果
-                if (content.startsWith("```")) {
-                    content = content.replaceAll("```json\\n?", "").replaceAll("```\\n?", "").trim();
-                }
                 JSONObject result = new JSONObject(content);
                 String zh = result.getString("zh");
                 String en = result.getString("en");
@@ -153,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
                     resultsLayout.setVisibility(View.VISIBLE);
                     translateBtn.setEnabled(true);
                 });
-
             } catch (Exception e) {
                 mainHandler.post(() -> {
                     Toast.makeText(this, "翻译失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -166,8 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void copyText(String text, String lang) {
         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("translation", text);
-        clipboard.setPrimaryClip(clip);
+        clipboard.setPrimaryClip(ClipData.newPlainText("translation", text));
         Toast.makeText(this, lang + " 已复制！", Toast.LENGTH_SHORT).show();
     }
 }

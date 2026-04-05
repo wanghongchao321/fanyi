@@ -11,7 +11,6 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- 标题 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -32,13 +31,11 @@
             android:gravity="center"
             android:layout_marginBottom="30dp"/>
 
-        <!-- 输入框 -->
         <EditText
             android:id="@+id/input_text"
             android:layout_width="match_parent"
             android:layout_height="120dp"
             android:hint="点击「翻译」自动读取剪贴板内容..."
-            android:hintTextColor="#554466"
             android:textColor="#E8D5FF"
             android:textSize="15sp"
             android:padding="16dp"
@@ -47,29 +44,25 @@
             android:inputType="textMultiLine"
             android:layout_marginBottom="20dp"/>
 
-        <!-- 翻译按钮 -->
         <Button
             android:id="@+id/translate_btn"
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:text="📋  点击翻译（自动读取剪贴板）"
+            android:text="点击翻译（自动读取剪贴板）"
             android:textSize="16sp"
             android:textColor="#0F0F1A"
             android:textStyle="bold"
             android:background="@drawable/btn_bg"
             android:layout_marginBottom="24dp"/>
 
-        <!-- 加载中 -->
         <ProgressBar
             android:id="@+id/progress_bar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:indeterminateTint="#C084FC"
             android:visibility="gone"
             android:layout_marginBottom="16dp"/>
 
-        <!-- 结果区域 -->
         <LinearLayout
             android:id="@+id/results_layout"
             android:layout_width="match_parent"
@@ -86,12 +79,10 @@
                 android:gravity="center"
                 android:layout_marginBottom="16dp"/>
 
-            <!-- 中文 -->
             <TextView
-                android:id="@+id/zh_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="🇨🇳  中文"
+                android:text="中文"
                 android:textSize="13sp"
                 android:textColor="#C084FC"
                 android:textStyle="bold"
@@ -108,12 +99,10 @@
                 android:background="@drawable/result_bg"
                 android:layout_marginBottom="16dp"/>
 
-            <!-- 英文 -->
             <TextView
-                android:id="@+id/en_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="🇬🇧  English"
+                android:text="English"
                 android:textSize="13sp"
                 android:textColor="#60A5FA"
                 android:textStyle="bold"
@@ -130,12 +119,10 @@
                 android:background="@drawable/result_bg_blue"
                 android:layout_marginBottom="16dp"/>
 
-            <!-- 法文 -->
             <TextView
-                android:id="@+id/fr_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="🇫🇷  Français"
+                android:text="Français"
                 android:textSize="13sp"
                 android:textColor="#34D399"
                 android:textStyle="bold"
