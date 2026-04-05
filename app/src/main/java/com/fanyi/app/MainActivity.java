@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     private EditText inputText;
-    private Button clipboardBtn, inputBtn;
+    private Button clipboardBtn, inputBtn, clearBtn;
     private ProgressBar progressBar;
     private LinearLayout resultsLayout;
     private TextView zhResult, enResult, frResult;
@@ -45,13 +45,13 @@ public class MainActivity extends AppCompatActivity {
         inputText = findViewById(R.id.input_text);
         clipboardBtn = findViewById(R.id.clipboard_btn);
         inputBtn = findViewById(R.id.input_btn);
+        clearBtn = findViewById(R.id.clear_btn);
         progressBar = findViewById(R.id.progress_bar);
         resultsLayout = findViewById(R.id.results_layout);
         zhResult = findViewById(R.id.zh_result);
         enResult = findViewById(R.id.en_result);
         frResult = findViewById(R.id.fr_result);
 
-        // 按钮1：读取剪贴板并翻译
         clipboardBtn.setOnClickListener(v -> {
             ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             if (clipboard.hasPrimaryClip() && clipboard.getPrimaryClip().getItemCount() > 0) {
@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // 按钮2：翻译输入框内容
         inputBtn.setOnClickListener(v -> {
             String text = inputText.getText().toString().trim();
             if (text.isEmpty()) {
@@ -76,6 +75,16 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 startTranslation(text);
             }
+        });
+
+        // 清空按钮：清空输入框和翻译结果
+        clearBtn.setOnClickListener(v -> {
+            inputText.setText("");
+            zhResult.setText("");
+            enResult.setText("");
+            frResult.setText("");
+            resultsLayout.setVisibility(View.GONE);
+            Toast.makeText(this, "已清空", Toast.LENGTH_SHORT).show();
         });
 
         zhResult.setOnClickListener(v -> copyText(zhResult.getText().toString(), "中文"));
@@ -88,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         resultsLayout.setVisibility(View.GONE);
         clipboardBtn.setEnabled(false);
         inputBtn.setEnabled(false);
+        clearBtn.setEnabled(false);
 
         executor.execute(() -> {
             try {
@@ -142,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
                     resultsLayout.setVisibility(View.VISIBLE);
                     clipboardBtn.setEnabled(true);
                     inputBtn.setEnabled(true);
+                    clearBtn.setEnabled(true);
                 });
             } catch (Exception e) {
                 mainHandler.post(() -> {
@@ -149,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.GONE);
                     clipboardBtn.setEnabled(true);
                     inputBtn.setEnabled(true);
+                    clearBtn.setEnabled(true);
                 });
             }
         });
