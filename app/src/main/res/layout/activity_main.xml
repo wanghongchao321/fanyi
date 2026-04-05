@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0F0F1A"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- 标题 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="智能翻译"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#E8D5FF"
+            android:gravity="center"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="中文 · English · Français"
+            android:textSize="14sp"
+            android:textColor="#8877AA"
+            android:gravity="center"
+            android:layout_marginBottom="30dp"/>
+
+        <!-- 输入框 -->
+        <EditText
+            android:id="@+id/input_text"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:hint="点击「翻译」自动读取剪贴板内容..."
+            android:hintTextColor="#554466"
+            android:textColor="#E8D5FF"
+            android:textSize="15sp"
+            android:padding="16dp"
+            android:gravity="top"
+            android:background="@drawable/input_bg"
+            android:inputType="textMultiLine"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- 翻译按钮 -->
+        <Button
+            android:id="@+id/translate_btn"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="📋  点击翻译（自动读取剪贴板）"
+            android:textSize="16sp"
+            android:textColor="#0F0F1A"
+            android:textStyle="bold"
+            android:background="@drawable/btn_bg"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- 加载中 -->
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="#C084FC"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- 结果区域 -->
+        <LinearLayout
+            android:id="@+id/results_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="点击任意结果可直接复制"
+                android:textSize="12sp"
+                android:textColor="#665577"
+                android:gravity="center"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- 中文 -->
+            <TextView
+                android:id="@+id/zh_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🇨🇳  中文"
+                android:textSize="13sp"
+                android:textColor="#C084FC"
+                android:textStyle="bold"
+                android:layout_marginBottom="6dp"/>
+
+            <TextView
+                android:id="@+id/zh_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#F0E8FF"
+                android:textSize="16sp"
+                android:lineSpacingMultiplier="1.5"
+                android:padding="16dp"
+                android:background="@drawable/result_bg"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- 英文 -->
+            <TextView
+                android:id="@+id/en_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🇬🇧  English"
+                android:textSize="13sp"
+                android:textColor="#60A5FA"
+                android:textStyle="bold"
+                android:layout_marginBottom="6dp"/>
+
+            <TextView
+                android:id="@+id/en_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#E8F0FF"
+                android:textSize="16sp"
+                android:lineSpacingMultiplier="1.5"
+                android:padding="16dp"
+                android:background="@drawable/result_bg_blue"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- 法文 -->
+            <TextView
+                android:id="@+id/fr_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🇫🇷  Français"
+                android:textSize="13sp"
+                android:textColor="#34D399"
+                android:textStyle="bold"
+                android:layout_marginBottom="6dp"/>
+
+            <TextView
+                android:id="@+id/fr_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#E8FFF4"
+                android:textSize="16sp"
+                android:lineSpacingMultiplier="1.5"
+                android:padding="16dp"
+                android:background="@drawable/result_bg_green"
+                android:layout_marginBottom="30dp"/>
+
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
