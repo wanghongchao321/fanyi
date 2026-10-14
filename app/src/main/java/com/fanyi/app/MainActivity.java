@@ -33,9 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout resultsLayout;
     private TextView zhResult, enResult, frResult;
 
-    private final String API_KEY = "34c1a4c87e2f4665b9b5bb0f9e0932cb.do6Zl8FEsus2Ybgp";
     private final String API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
-    private final String MODEL = "glm-4-flashx-250414";
+    private final String MODEL = "glm-4.7-flash";
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -97,18 +96,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startTranslation(String text) {
+        final String apiKey = getPreferences(MODE_PRIVATE).getString("api_key", "");
+        if (apiKey.trim().isEmpty()) {
+            showApiKeyDialog(text);
+            return;
+        }
         progressBar.setVisibility(View.VISIBLE);
         resultsLayout.setVisibility(View.GONE);
         setButtonsEnabled(false);
 
         executor.execute(() -> {
+            HttpURLConnection conn = null;
             try {
                 String prompt = "将以下文本完整翻译成中文、英文和法文，不得省略任何内容。" +
                         "严格只返回JSON，格式：{\"zh\":\"中文完整译文\",\"en\":\"English full translation\",\"fr\":\"Traduction française complète\"}\n原文：" + text;
 
                 JSONObject requestBody = new JSONObject();
                 requestBody.put("model", MODEL);
-                requestBody.put("max_tokens", 4096);
+                requestBody.put("max_tokens", 8192);
+                requestBody.put("thinking", new JSONObject().put("type", "disabled"));
+                requestBody.put("response_format", new JSONObject().put("type", "json_object"));
                 JSONArray messages = new JSONArray();
                 JSONObject msg = new JSONObject();
                 msg.put("role", "user");
@@ -117,10 +124,10 @@ public class MainActivity extends AppCompatActivity {
                 requestBody.put("messages", messages);
 
                 URL url = new URL(API_URL);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("Authorization", "Bearer " + API_KEY);
+                conn.setRequestProperty("Authorization", "Bearer " + apiKey);
                 conn.setDoOutput(true);
                 conn.setConnectTimeout(30000);
                 conn.setReadTimeout(60000);
@@ -129,14 +136,30 @@ public class MainActivity extends AppCompatActivity {
                 os.write(requestBody.toString().getBytes("UTF-8"));
                 os.close();
 
+                int status = conn.getResponseCode();
+                java.io.InputStream stream = status >= 200 && status < 300
+                        ? conn.getInputStream() : conn.getErrorStream();
+                if (stream == null) throw new java.io.IOException("HTTP " + status);
                 BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                        new InputStreamReader(stream, "UTF-8"));
                 StringBuilder sb = new StringBuilder();
                 String line;
                 while ((line = reader.readLine()) != null) sb.append(line);
                 reader.close();
 
+                if (status < 200 || status >= 300) {
+                    String detail = "HTTP " + status;
+                    try {
+                        JSONObject error = new JSONObject(sb.toString()).optJSONObject("error");
+                        if (error != null) detail += "：" + error.optString("message", "接口请求失败");
+                    } catch (Exception ignored) {}
+                    throw new java.io.IOException(detail);
+                }
                 JSONObject response = new JSONObject(sb.toString());
+                if ("length".equals(response.getJSONArray("choices").getJSONObject(0)
+                        .optString("finish_reason"))) {
+                    throw new java.io.IOException("译文超过输出上限，请分段翻译");
+                }
                 String content = response.getJSONArray("choices")
                         .getJSONObject(0).getJSONObject("message")
                         .getString("content").trim()
@@ -159,12 +182,41 @@ public class MainActivity extends AppCompatActivity {
                 });
             } catch (Exception e) {
                 mainHandler.post(() -> {
-                    Toast.makeText(this, "翻译失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+                    new androidx.appcompat.app.AlertDialog.Builder(this)
+                            .setTitle("翻译失败")
+                            .setMessage(e.getMessage())
+                            .setPositiveButton("确定", null)
+                            .setNeutralButton("更换密钥", (dialog, which) -> showApiKeyDialog(null))
+                            .show();
                     progressBar.setVisibility(View.GONE);
                     setButtonsEnabled(true);
                 });
+            } finally {
+                if (conn != null) conn.disconnect();
             }
         });
+    }
+
+    private void showApiKeyDialog(String pendingText) {
+        EditText keyInput = new EditText(this);
+        keyInput.setSingleLine(true);
+        keyInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        keyInput.setHint("智谱 API Key");
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("设置智谱 API 密钥")
+                .setMessage("请输入你在智谱开放平台生成的密钥，仅保存在本机。")
+                .setView(keyInput)
+                .setNegativeButton("取消", null)
+                .setPositiveButton("保存", (dialog, which) -> {
+                    String key = keyInput.getText().toString().trim();
+                    if (key.isEmpty()) {
+                        Toast.makeText(this, "密钥不能为空", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    getPreferences(MODE_PRIVATE).edit().putString("api_key", key).apply();
+                    if (pendingText != null) startTranslation(pendingText);
+                }).show();
     }
 
     private void setButtonsEnabled(boolean enabled) {
