@@ -115,7 +115,8 @@ public class MainActivity extends AppCompatActivity {
                 requestBody.put("model", MODEL);
                 requestBody.put("max_tokens", 8192);
                 requestBody.put("stream", false);
-                requestBody.put("thinking", new JSONObject().put("type", "disabled"));
+                requestBody.put("thinking", new JSONObject().put("type", "enabled"));
+                requestBody.put("reasoning_effort", "low");
                 requestBody.put("response_format", new JSONObject().put("type", "json_object"));
                 JSONArray messages = new JSONArray();
                 JSONObject msg = new JSONObject();
@@ -131,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 conn.setRequestProperty("Authorization", "Bearer " + apiKey);
                 conn.setDoOutput(true);
                 conn.setConnectTimeout(30000);
-                conn.setReadTimeout(60000);
+                conn.setReadTimeout(120000);
 
                 OutputStream os = conn.getOutputStream();
                 os.write(requestBody.toString().getBytes("UTF-8"));
