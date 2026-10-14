@@ -33,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout resultsLayout;
     private TextView zhResult, enResult, frResult;
 
-    private final String API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
-    private final String MODEL = "glm-4.7-flash";
+    private final String API_URL = "https://api.deepseek.com/chat/completions";
+    private final String MODEL = "deepseek-flash";
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startTranslation(String text) {
-        final String apiKey = getPreferences(MODE_PRIVATE).getString("api_key", "");
+        final String apiKey = getPreferences(MODE_PRIVATE).getString("deepseek_api_key", "");
         if (apiKey.trim().isEmpty()) {
             showApiKeyDialog(text);
             return;
@@ -114,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject requestBody = new JSONObject();
                 requestBody.put("model", MODEL);
                 requestBody.put("max_tokens", 8192);
+                requestBody.put("stream", false);
                 requestBody.put("thinking", new JSONObject().put("type", "disabled"));
                 requestBody.put("response_format", new JSONObject().put("type", "json_object"));
                 JSONArray messages = new JSONArray();
@@ -202,10 +203,10 @@ public class MainActivity extends AppCompatActivity {
         keyInput.setSingleLine(true);
         keyInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT
                 | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        keyInput.setHint("智谱 API Key");
+        keyInput.setHint("DeepSeek API Key");
         new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("设置智谱 API 密钥")
-                .setMessage("请输入你在智谱开放平台生成的密钥，仅保存在本机。")
+                .setTitle("设置DeepSeek API 密钥")
+                .setMessage("请输入你在DeepSeek开放平台生成的密钥，仅保存在本机。")
                 .setView(keyInput)
                 .setNegativeButton("取消", null)
                 .setPositiveButton("保存", (dialog, which) -> {
@@ -214,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(this, "密钥不能为空", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    getPreferences(MODE_PRIVATE).edit().putString("api_key", key).apply();
+                    getPreferences(MODE_PRIVATE).edit().putString("deepseek_api_key", key).apply();
                     if (pendingText != null) startTranslation(pendingText);
                 }).show();
     }
